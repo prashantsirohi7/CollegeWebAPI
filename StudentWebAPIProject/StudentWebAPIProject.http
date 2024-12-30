@@ -1,0 +1,6 @@
+@StudentWebAPIProject_HostAddress = http://localhost:5101
+
+GET {{StudentWebAPIProject_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
