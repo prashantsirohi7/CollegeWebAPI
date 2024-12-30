@@ -1,5 +1,7 @@
 using StudentWebAPIProject.Logging;
 using Serilog;
+using StudentWebAPIProject.DBSets;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,11 @@ Log.Logger = new LoggerConfiguration()
 
 //to add serilog along with in build logging
 //builder.Logging.AddSerilog();
+#endregion
+
+#region DBConnection
+builder.Services.AddDbContext<CollegeDBContext>(options => 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("CollegeDBConnection")));
 #endregion
 
 // Add services to the container.
