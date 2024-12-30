@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using StudentWebAPIProject.DBSets;
 using StudentWebAPIProject.Models;
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 using IMyLogger = StudentWebAPIProject.Logging.ILogger;
 
 namespace StudentWebAPIProject.Controllers
@@ -13,11 +15,14 @@ namespace StudentWebAPIProject.Controllers
         private readonly IMyLogger _myLogger;
         //inbuild logger
         private readonly ILogger<StudentController> _inbuildLogger;
+        //For inegrating with DB
+        private readonly CollegeDBContext _collegeDBContext;
 
-        public StudentController(IMyLogger myLogger, ILogger<StudentController> inbuildLogger)
+        public StudentController(IMyLogger myLogger, ILogger<StudentController> inbuildLogger, CollegeDBContext collegeDBContext)
         {
             _myLogger = myLogger;
             _inbuildLogger = inbuildLogger;
+            _collegeDBContext = collegeDBContext;
         }
 
         [HttpGet("{id:int}", Name = "StudentDetailsById")]
@@ -30,17 +35,18 @@ namespace StudentWebAPIProject.Controllers
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = CollegeRepository.Students.Where(x => x.id == id).FirstOrDefault();
+            var student = _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefault();
             if (student is null)
                 return NotFound($"No student found with {id}");
 
             var studentDto = new StudentDTO
             {
-                id = student.id,
-                name = student.name,
-                email = student.email,
-                address = student.address,
-                age = student.age
+                id = student.Id,
+                name = student.Name,
+                email = student.Email,
+                address = student.Address,
+                DOB = student.DOB,
+                addmissionDate = student.AddmissionDate
             };
             _myLogger.Log("Fetched Student Details");
             return Ok(studentDto);
@@ -51,13 +57,14 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<IEnumerable<StudentDTO>> Students()
         {
-            var students = CollegeRepository.Students.Select(x => new StudentDTO
+            var students = _collegeDBContext.Students.Select(x => new StudentDTO
             {
-                id = x.id,
-                name = x.name,
-                email = x.email,
-                address = x.address,
-                age = x.age
+                id = x.Id,
+                name = x.Name,
+                email = x.Email,
+                address = x.Address,
+                DOB = x.DOB,
+                addmissionDate = x.AddmissionDate
             });
             return Ok(students);
         }
@@ -68,7 +75,7 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<Student> GetStudentByName(string name)
+        public ActionResult<StudentDTO> GetStudentByName(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -76,7 +83,7 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest("Student name is empty");
             }
 
-            var student = CollegeRepository.Students.Where(x => x.name.ToLower() == name.ToLower()).FirstOrDefault();
+            var student = _collegeDBContext.Students.Where(x => x.Name.ToLower() == name.ToLower()).FirstOrDefault();
             if (student is null)
             {
                 _inbuildLogger.LogError($"No student found with {name}");
@@ -85,18 +92,19 @@ namespace StudentWebAPIProject.Controllers
 
             var studentDto = new StudentDTO
             {
-                id = student.id,
-                name = student.name,
-                email = student.email,
-                address = student.address,
-                age = student.age
+                id = student.Id,
+                name = student.Name,
+                email = student.Email,
+                address = student.Address,
+                DOB = student.DOB,
+                addmissionDate = student.AddmissionDate
             };
 
             _inbuildLogger.LogInformation("Student found");
             return Ok(studentDto);
         }
 
-        [HttpDelete("{id:alpha}", Name = "DeleteStudent")]
+        [HttpDelete("{id:int}", Name = "DeleteStudent")]
         [ProducesResponseType(StatusCodes.Status200OK)]     //for documentation
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -106,11 +114,14 @@ namespace StudentWebAPIProject.Controllers
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = CollegeRepository.Students.Where(x => x.id == id).FirstOrDefault();
+            var student = _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefault();
             if (student is null)
                 return NotFound($"No student found with {id}");
 
-            return Ok(CollegeRepository.Students.Remove(student));
+            _collegeDBContext.Students.Remove(student);
+            _collegeDBContext.SaveChanges();
+
+            return Ok();
         }
 
         [HttpPost("Create")]
@@ -130,17 +141,19 @@ namespace StudentWebAPIProject.Controllers
             //if (model.addmissionDate < DateTime.Today)
             //    return BadRequest("Admission date is less than today date");
 
-            var id = CollegeRepository.Students.LastOrDefault().id + 1;
-            CollegeRepository.Students.Add(new Student
+            var student = new DBSets.Student
             {
-                id = id,
-                name = model.name,
-                address = model.address,
-                age = model.age,
-                email = model.email
-            });
+                Name = model.name,
+                Address = model.address,
+                DOB = model.DOB,
+                Email = model.email,
+                AddmissionDate = model.addmissionDate
+            };
+            _collegeDBContext.Students.Add(student);
 
-            model.id = id;
+            _collegeDBContext.SaveChanges();
+
+            model.id = student.Id;
             return CreatedAtRoute("StudentDetailsById", new { id = model.id }, model);
         }
 
@@ -154,14 +167,36 @@ namespace StudentWebAPIProject.Controllers
             if(model is null || model.id <= 0)
                 return BadRequest();
 
-            var student = CollegeRepository.Students.Where(x => x.id == model.id).FirstOrDefault();
+            /*
+            var student = _collegeDBContext.Students.Where(x => x.Id == model.id).FirstOrDefault();
             if (student is null)
                 return NotFound();
 
-            student.name = model.name;
-            student.address = model.address;
-            student.email = model.email;
+            student.Name = model.name;
+            student.Address = model.address;
+            student.Email = model.email;
+            student.DOB = model.DOB;
+            student.AddmissionDate = model.addmissionDate;
+            _collegeDBContext.SaveChanges();
+            */
 
+            // Add asnotracking to avoid tracking for update to DB
+            var student = _collegeDBContext.Students.AsNoTracking().Where(x => x.Id == model.id).FirstOrDefault();
+            if (student is null)
+                return NotFound();
+
+            var studentEntity = new DBSets.Student
+            {
+                Id = student.Id,
+                Name = model.name,
+                Address = model.address,
+                DOB = model.DOB,
+                Email = model.email,
+                AddmissionDate = model.addmissionDate
+            };
+
+            _collegeDBContext.Students.Update(studentEntity);
+            _collegeDBContext.SaveChanges();
             return NoContent();
         }
 
@@ -175,17 +210,18 @@ namespace StudentWebAPIProject.Controllers
             if (model is null || id <= 0)
                 return BadRequest();
 
-            var student = CollegeRepository.Students.Where(x => x.id == id).FirstOrDefault();
+            var student = _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefault();
             if (student is null)
                 return NotFound();
 
             var studentDto = new StudentDTO
             {
-                id = student.id,
-                name = student.name,
-                address = student.address,
-                email = student.email,
-                age = student.age
+                id = student.Id,
+                name = student.Name,
+                address = student.Address,
+                email = student.Email,
+                DOB = student.DOB,
+                addmissionDate = student.AddmissionDate
             };
 
             model.ApplyTo(studentDto, ModelState);
@@ -193,10 +229,12 @@ namespace StudentWebAPIProject.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            student.name = studentDto.name;
-            student.address = studentDto.address;
-            student.email = studentDto.email;
-            student.age = studentDto.age;
+            student.Name = studentDto.name;
+            student.Address = studentDto.address;
+            student.Email = studentDto.email;
+            student.DOB = studentDto.DOB;
+            student.AddmissionDate = studentDto.addmissionDate;
+            _collegeDBContext.SaveChanges();
 
             return NoContent();
         }

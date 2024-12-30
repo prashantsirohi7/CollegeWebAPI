@@ -41,7 +41,7 @@ builder.Services.AddDbContext<CollegeDBContext>(options =>
 options in AddControllers = to return 406 Not Acceptable error for other formats asked in request headers
 AddXmlDataContractSerializerFormatters = to accept xml format to be returned
  */
-builder.Services.AddControllers(options => options.ReturnHttpNotAcceptable = true).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();
+builder.Services.AddControllers(options => options.ReturnHttpNotAcceptable = false).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

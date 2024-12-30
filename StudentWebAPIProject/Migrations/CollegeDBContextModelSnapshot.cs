@@ -30,8 +30,10 @@ namespace StudentWebAPIProject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("AddmissionDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -50,12 +52,13 @@ namespace StudentWebAPIProject.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("students");
+                    b.ToTable("Students", (string)null);
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            AddmissionDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Address = "USA",
                             DOB = new DateTime(1990, 12, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "John@test.com",
@@ -64,6 +67,7 @@ namespace StudentWebAPIProject.Migrations
                         new
                         {
                             Id = 2,
+                            AddmissionDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Address = "USA",
                             DOB = new DateTime(1990, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "Sam@test.com",

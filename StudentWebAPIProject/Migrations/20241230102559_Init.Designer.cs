@@ -12,8 +12,8 @@ using StudentWebAPIProject.DBSets;
 namespace StudentWebAPIProject.Migrations
 {
     [DbContext(typeof(CollegeDBContext))]
-    [Migration("20241230085646_init")]
-    partial class init
+    [Migration("20241230102559_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,24 +33,49 @@ namespace StudentWebAPIProject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("AddmissionDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("DOB")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("students");
+                    b.ToTable("Students", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AddmissionDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Address = "USA",
+                            DOB = new DateTime(1990, 12, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "John@test.com",
+                            Name = "John"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AddmissionDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Address = "USA",
+                            DOB = new DateTime(1990, 11, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "Sam@test.com",
+                            Name = "Sam"
+                        });
                 });
 #pragma warning restore 612, 618
         }

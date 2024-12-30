@@ -12,8 +12,8 @@ namespace StudentWebAPIProject.Models
         [StringLength(30)]
         public string name { get; set; }
         [Required]
-        [Range(18,30)]
-        public int age { get; set; }
+        [DOBCheck]
+        public DateTime DOB { get; set; }
         [EmailAddress(ErrorMessage = "Please provide valid email")]
         public string email { get; set; }
         [Required]
