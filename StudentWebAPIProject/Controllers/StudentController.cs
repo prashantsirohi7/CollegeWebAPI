@@ -30,12 +30,12 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<StudentDTO> StudentDetails(int id)
+        public async Task<ActionResult<StudentDTO>> StudentDetailsAsync(int id)
         {
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefault();
+            var student = await _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefaultAsync();
             if (student is null)
                 return NotFound($"No student found with {id}");
 
@@ -55,9 +55,9 @@ namespace StudentWebAPIProject.Controllers
         [HttpGet("All")]
         [ProducesResponseType(StatusCodes.Status200OK)]     //for documentation
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<IEnumerable<StudentDTO>> Students()
+        public async Task<ActionResult<IEnumerable<StudentDTO>>> StudentsAsync()
         {
-            var students = _collegeDBContext.Students.Select(x => new StudentDTO
+            var students = await _collegeDBContext.Students.Select(x => new StudentDTO
             {
                 id = x.Id,
                 name = x.Name,
@@ -65,7 +65,7 @@ namespace StudentWebAPIProject.Controllers
                 address = x.Address,
                 DOB = x.DOB,
                 addmissionDate = x.AddmissionDate
-            });
+            }).ToListAsync();
             return Ok(students);
         }
 
@@ -75,7 +75,7 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<StudentDTO> GetStudentByName(string name)
+        public async Task<ActionResult<StudentDTO>> GetStudentByNameAsync(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -83,7 +83,7 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest("Student name is empty");
             }
 
-            var student = _collegeDBContext.Students.Where(x => x.Name.ToLower() == name.ToLower()).FirstOrDefault();
+            var student = await _collegeDBContext.Students.Where(x => x.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
             if (student is null)
             {
                 _inbuildLogger.LogError($"No student found with {name}");
@@ -104,22 +104,22 @@ namespace StudentWebAPIProject.Controllers
             return Ok(studentDto);
         }
 
-        [HttpDelete("{id:int}", Name = "DeleteStudent")]
+        [HttpDelete("Delete/{id:int}", Name = "DeleteStudent")]
         [ProducesResponseType(StatusCodes.Status200OK)]     //for documentation
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<bool> Delete(int id)
+        public async Task<ActionResult<bool>> DeleteAsync(int id)
         {
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefault();
+            var student = await _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefaultAsync();
             if (student is null)
                 return NotFound($"No student found with {id}");
 
             _collegeDBContext.Students.Remove(student);
-            _collegeDBContext.SaveChanges();
+            await _collegeDBContext.SaveChangesAsync();
 
             return Ok();
         }
@@ -128,7 +128,7 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]     //for documentation
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<StudentDTO> CreateStudent([FromBody]StudentDTO model)
+        public async Task<ActionResult<StudentDTO>> CreateStudentAsync([FromBody]StudentDTO model)
         {
             // if ApiController attribue is not used
             //if (!ModelState.IsValid)
@@ -149,9 +149,9 @@ namespace StudentWebAPIProject.Controllers
                 Email = model.email,
                 AddmissionDate = model.addmissionDate
             };
-            _collegeDBContext.Students.Add(student);
+            await _collegeDBContext.Students.AddAsync(student);
 
-            _collegeDBContext.SaveChanges();
+            await _collegeDBContext.SaveChangesAsync();
 
             model.id = student.Id;
             return CreatedAtRoute("StudentDetailsById", new { id = model.id }, model);
@@ -162,7 +162,7 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult UpdateStudentDetails([FromBody]StudentDTO model)
+        public async Task<ActionResult> UpdateStudentDetailsAsync([FromBody]StudentDTO model)
         {
             if(model is null || model.id <= 0)
                 return BadRequest();
@@ -181,7 +181,7 @@ namespace StudentWebAPIProject.Controllers
             */
 
             // Add asnotracking to avoid tracking for update to DB
-            var student = _collegeDBContext.Students.AsNoTracking().Where(x => x.Id == model.id).FirstOrDefault();
+            var student = await _collegeDBContext.Students.AsNoTracking().Where(x => x.Id == model.id).FirstOrDefaultAsync();
             if (student is null)
                 return NotFound();
 
@@ -196,7 +196,7 @@ namespace StudentWebAPIProject.Controllers
             };
 
             _collegeDBContext.Students.Update(studentEntity);
-            _collegeDBContext.SaveChanges();
+            await _collegeDBContext.SaveChangesAsync();
             return NoContent();
         }
 
@@ -205,12 +205,12 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult UpdateStudentPartialDetails(int id, [FromBody] JsonPatchDocument<StudentDTO> model)
+        public async Task<ActionResult> UpdateStudentPartialDetailsAsync(int id, [FromBody] JsonPatchDocument<StudentDTO> model)
         {
             if (model is null || id <= 0)
                 return BadRequest();
 
-            var student = _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefault();
+            var student = await _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefaultAsync();
             if (student is null)
                 return NotFound();
 
@@ -234,7 +234,8 @@ namespace StudentWebAPIProject.Controllers
             student.Email = studentDto.email;
             student.DOB = studentDto.DOB;
             student.AddmissionDate = studentDto.addmissionDate;
-            _collegeDBContext.SaveChanges();
+
+           await _collegeDBContext.SaveChangesAsync();
 
             return NoContent();
         }
