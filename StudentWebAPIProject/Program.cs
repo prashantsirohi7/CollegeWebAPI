@@ -55,6 +55,7 @@ builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 //Creates 1 object per request ['n' object instance for 'n' requests]
 builder.Services.AddScoped<StudentWebAPIProject.Logging.ILogger, LogToDB>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped(typeof(ICollegeRepository<>), typeof(CollegeRepository<>));
 
 /*
 Dependency Injection

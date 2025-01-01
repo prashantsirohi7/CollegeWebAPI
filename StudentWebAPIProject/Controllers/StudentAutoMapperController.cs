@@ -19,10 +19,10 @@ namespace StudentWebAPIProject.Controllers
         private readonly ILogger<StudentController> _inbuildLogger;
         //AutoMapper
         private readonly IMapper _mapper;
-        private readonly IStudentRepository _studentRepository;
+        private readonly ICollegeRepository<Student> _studentRepository;
 
         public StudentAutoMapperController(IMyLogger myLogger, ILogger<StudentController> inbuildLogger, 
-            IStudentRepository studentRepository, IMapper mapper)
+            ICollegeRepository<Student> studentRepository, IMapper mapper)
         {
             _myLogger = myLogger;
             _inbuildLogger = inbuildLogger;
@@ -40,7 +40,7 @@ namespace StudentWebAPIProject.Controllers
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = await _studentRepository.GetStudentByIdAsync(id);
+            var student = await _studentRepository.GetByFilterAsync(student => student.Id == id);
             if (student is null)
                 return NotFound($"No student found with {id}");
 
@@ -55,7 +55,7 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<IEnumerable<StudentDTO>>> StudentsAsync()
         {
-            var students = await _studentRepository.GetAllStudentsAsync();
+            var students = await _studentRepository.GetAllAsync();
             var studentDto = _mapper.Map<IEnumerable<StudentDTO>>(students);
 
             return Ok(studentDto);
@@ -75,7 +75,7 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest("Student name is empty");
             }
 
-            var student = await _studentRepository.GetStudentByNameAsync(name);
+            var student = await _studentRepository.GetByFilterAsync(student => student.Name.ToLower() == name.ToLower());
             if (student is null)
             {
                 _inbuildLogger.LogError($"No student found with {name}");
@@ -98,11 +98,11 @@ namespace StudentWebAPIProject.Controllers
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = await _studentRepository.GetStudentByIdAsync(id);
+            var student = await _studentRepository.GetByFilterAsync(student => student.Id == id);
             if (student is null)
                 return NotFound($"No student found with {id}");
 
-            await _studentRepository.DeleteStudentAsync(student);
+            await _studentRepository.DeleteAsync(student);
 
             return Ok();
         }
@@ -125,9 +125,9 @@ namespace StudentWebAPIProject.Controllers
             //    return BadRequest("Admission date is less than today date");
 
             var student = _mapper.Map<Student>(model); 
-            var studentId = await _studentRepository.CreateStudentAsync(student);
+            var newStudent = await _studentRepository.CreateAsync(student);
 
-            model.id = studentId;
+            model.id = newStudent.Id;
             return CreatedAtRoute("StudentDetailsById", new { id = model.id }, model);
         }
 
@@ -142,13 +142,13 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest();
 
             // Add asnotracking to avoid tracking for update to DB
-            var student = await _studentRepository.GetStudentByIdAsync(model.id, true);
+            var student = await _studentRepository.GetByFilterAsync(student => student.Id == model.id, true);
             if (student is null)
                 return NotFound();
 
             var studentEntity = _mapper.Map<Student>(model); 
 
-            await _studentRepository.UpdateStudentAsync(studentEntity);
+            await _studentRepository.UpdateAsync(studentEntity);
             return NoContent();
         }
 
@@ -162,7 +162,7 @@ namespace StudentWebAPIProject.Controllers
             if (model is null || id <= 0)
                 return BadRequest();
 
-            var student = await _studentRepository.GetStudentByIdAsync(id, true);
+            var student = await _studentRepository.GetByFilterAsync(student => student.Id == id, true);
             if (student is null)
                 return NotFound();
 
@@ -174,7 +174,7 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest(ModelState);
 
             student = _mapper.Map<Student>(studentDto);
-            await _studentRepository.UpdateStudentAsync(student);
+            await _studentRepository.UpdateAsync(student);
 
             return NoContent();
         }
