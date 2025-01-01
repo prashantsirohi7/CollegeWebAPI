@@ -2,6 +2,7 @@ using StudentWebAPIProject.Logging;
 using Serilog;
 using StudentWebAPIProject.DBSets;
 using Microsoft.EntityFrameworkCore;
+using StudentWebAPIProject.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,9 @@ builder.Services.AddControllers(options => options.ReturnHttpNotAcceptable = fal
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//To add Automapper configuration
+builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 
 //Dependency Injection
 //Creates 1 object per request ['n' object instance for 'n' requests]
