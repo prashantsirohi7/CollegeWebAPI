@@ -19,10 +19,11 @@ namespace StudentWebAPIProject.Controllers
         private readonly ILogger<StudentController> _inbuildLogger;
         //AutoMapper
         private readonly IMapper _mapper;
-        private readonly ICollegeRepository<Student> _studentRepository;
+        //private readonly ICollegeRepository<Student> _studentRepository;
+        private readonly IStudentRepository _studentRepository;
 
         public StudentAutoMapperController(IMyLogger myLogger, ILogger<StudentController> inbuildLogger, 
-            ICollegeRepository<Student> studentRepository, IMapper mapper)
+            IStudentRepository studentRepository, IMapper mapper)
         {
             _myLogger = myLogger;
             _inbuildLogger = inbuildLogger;
