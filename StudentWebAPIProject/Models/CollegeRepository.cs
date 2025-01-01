@@ -6,19 +6,21 @@
         {
             new Student
             {
-                id = 1,
-                name = "Ramesh",
-                age = 20,
-                address = "Bangalore",
-                email = "ramesh@test.com"
+                Id = 1,
+                Name = "Ramesh",
+                DOB = new DateTime(2000, 10, 05),
+                Address = "Bangalore",
+                Email = "ramesh@test.com",
+                AddmissionDate = DateTime.Today
             },
             new Student
             {
-                id = 2,
-                name = "Rajesh",
-                age = 20,
-                address = "Bangalore",
-                email = "rajesh@test.com"
+                Id = 2,
+                Name = "Rajesh",
+                DOB = new DateTime(2000, 10, 05),
+                Address = "Bangalore",
+                Email = "rajesh@test.com",
+                AddmissionDate = DateTime.Today
             }
         };
     }

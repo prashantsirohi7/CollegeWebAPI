@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentWebAPIProject.DBSets.Config;
+using StudentWebAPIProject.Models;
 
 namespace StudentWebAPIProject.DBSets
 {

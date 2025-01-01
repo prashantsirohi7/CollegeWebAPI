@@ -1,11 +1,17 @@
-﻿namespace StudentWebAPIProject.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace StudentWebAPIProject.Models
 {
     public class Student
     {
-        public int id { get; set; }
-        public string name { get; set; }
-        public int age { get; set; }
-        public string email { get; set; }
-        public string address { get; set; }  
+        //[Key]
+        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public DateTime DOB { get; set; }
+        public string Email { get; set; }
+        public string Address { get; set; }
+        public DateTime AddmissionDate { get; set; }
     }
 }

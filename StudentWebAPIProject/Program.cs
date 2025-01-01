@@ -3,6 +3,7 @@ using Serilog;
 using StudentWebAPIProject.DBSets;
 using Microsoft.EntityFrameworkCore;
 using StudentWebAPIProject.Configurations;
+using StudentWebAPIProject.DBSets.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,7 @@ builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 //Dependency Injection
 //Creates 1 object per request ['n' object instance for 'n' requests]
 builder.Services.AddScoped<StudentWebAPIProject.Logging.ILogger, LogToDB>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 
 /*
 Dependency Injection

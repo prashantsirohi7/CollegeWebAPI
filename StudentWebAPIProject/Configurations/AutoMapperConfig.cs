@@ -7,10 +7,10 @@ namespace StudentWebAPIProject.Configurations
     {
         public AutoMapperConfig() 
         {
-            CreateMap<StudentDTO, DBSets.Student>().ReverseMap();
+            CreateMap<StudentDTO, Student>().ReverseMap();
 
             //Config for different property names
-            CreateMap<StudentDTO, DBSets.Student>().ForMember(n => n.Name, opt => opt.MapFrom(x => x.name)).ReverseMap();
+            CreateMap<StudentDTO, Student>().ForMember(n => n.Name, opt => opt.MapFrom(x => x.name)).ReverseMap();
 
             //Config for ignoring property names
             //CreateMap<StudentDTO, DBSets.Student>().ReverseMap().ForMember(n => n.name, opt => opt.Ignore());

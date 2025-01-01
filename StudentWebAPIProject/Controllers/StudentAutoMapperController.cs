@@ -6,6 +6,7 @@ using System.Net;
 using Microsoft.EntityFrameworkCore;
 using IMyLogger = StudentWebAPIProject.Logging.ILogger;
 using AutoMapper;
+using StudentWebAPIProject.DBSets.Repository;
 
 namespace StudentWebAPIProject.Controllers
 {
@@ -16,17 +17,16 @@ namespace StudentWebAPIProject.Controllers
         private readonly IMyLogger _myLogger;
         //inbuild logger
         private readonly ILogger<StudentController> _inbuildLogger;
-        //For inegrating with DB
-        private readonly CollegeDBContext _collegeDBContext;
         //AutoMapper
         private readonly IMapper _mapper;
+        private readonly IStudentRepository _studentRepository;
 
         public StudentAutoMapperController(IMyLogger myLogger, ILogger<StudentController> inbuildLogger, 
-            CollegeDBContext collegeDBContext, IMapper mapper)
+            IStudentRepository studentRepository, IMapper mapper)
         {
             _myLogger = myLogger;
             _inbuildLogger = inbuildLogger;
-            _collegeDBContext = collegeDBContext;
+            _studentRepository = studentRepository;
             _mapper = mapper;
         }
 
@@ -40,7 +40,7 @@ namespace StudentWebAPIProject.Controllers
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = await _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefaultAsync();
+            var student = await _studentRepository.GetStudentByIdAsync(id);
             if (student is null)
                 return NotFound($"No student found with {id}");
 
@@ -55,7 +55,7 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<IEnumerable<StudentDTO>>> StudentsAsync()
         {
-            var students = await _collegeDBContext.Students.ToListAsync();
+            var students = await _studentRepository.GetAllStudentsAsync();
             var studentDto = _mapper.Map<IEnumerable<StudentDTO>>(students);
 
             return Ok(studentDto);
@@ -75,7 +75,7 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest("Student name is empty");
             }
 
-            var student = await _collegeDBContext.Students.Where(x => x.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+            var student = await _studentRepository.GetStudentByNameAsync(name);
             if (student is null)
             {
                 _inbuildLogger.LogError($"No student found with {name}");
@@ -98,12 +98,11 @@ namespace StudentWebAPIProject.Controllers
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = await _collegeDBContext.Students.Where(x => x.Id == id).FirstOrDefaultAsync();
+            var student = await _studentRepository.GetStudentByIdAsync(id);
             if (student is null)
                 return NotFound($"No student found with {id}");
 
-            _collegeDBContext.Students.Remove(student);
-            await _collegeDBContext.SaveChangesAsync();
+            await _studentRepository.DeleteStudentAsync(student);
 
             return Ok();
         }
@@ -125,12 +124,10 @@ namespace StudentWebAPIProject.Controllers
             //if (model.addmissionDate < DateTime.Today)
             //    return BadRequest("Admission date is less than today date");
 
-            var student = _mapper.Map<DBSets.Student>(model); 
-            await _collegeDBContext.Students.AddAsync(student);
+            var student = _mapper.Map<Student>(model); 
+            var studentId = await _studentRepository.CreateStudentAsync(student);
 
-            await _collegeDBContext.SaveChangesAsync();
-
-            model.id = student.Id;
+            model.id = studentId;
             return CreatedAtRoute("StudentDetailsById", new { id = model.id }, model);
         }
 
@@ -145,14 +142,13 @@ namespace StudentWebAPIProject.Controllers
                 return BadRequest();
 
             // Add asnotracking to avoid tracking for update to DB
-            var student = await _collegeDBContext.Students.AsNoTracking().Where(x => x.Id == model.id).FirstOrDefaultAsync();
+            var student = await _studentRepository.GetStudentByIdAsync(model.id, true);
             if (student is null)
                 return NotFound();
 
-            var studentEntity = _mapper.Map<DBSets.Student>(model); 
+            var studentEntity = _mapper.Map<Student>(model); 
 
-            _collegeDBContext.Students.Update(studentEntity);
-            await _collegeDBContext.SaveChangesAsync();
+            await _studentRepository.UpdateStudentAsync(studentEntity);
             return NoContent();
         }
 
@@ -166,7 +162,7 @@ namespace StudentWebAPIProject.Controllers
             if (model is null || id <= 0)
                 return BadRequest();
 
-            var student = await _collegeDBContext.Students.AsNoTracking().Where(x => x.Id == id).FirstOrDefaultAsync();
+            var student = await _studentRepository.GetStudentByIdAsync(id, true);
             if (student is null)
                 return NotFound();
 
@@ -177,10 +173,8 @@ namespace StudentWebAPIProject.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            student = _mapper.Map<DBSets.Student>(studentDto);
-            _collegeDBContext.Students.Update(student);
-
-           await _collegeDBContext.SaveChangesAsync();
+            student = _mapper.Map<Student>(studentDto);
+            await _studentRepository.UpdateStudentAsync(student);
 
             return NoContent();
         }

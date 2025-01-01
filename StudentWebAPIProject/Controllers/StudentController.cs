@@ -141,7 +141,7 @@ namespace StudentWebAPIProject.Controllers
             //if (model.addmissionDate < DateTime.Today)
             //    return BadRequest("Admission date is less than today date");
 
-            var student = new DBSets.Student
+            var student = new Student
             {
                 Name = model.name,
                 Address = model.address,
@@ -185,7 +185,7 @@ namespace StudentWebAPIProject.Controllers
             if (student is null)
                 return NotFound();
 
-            var studentEntity = new DBSets.Student
+            var studentEntity = new Student
             {
                 Id = student.Id,
                 Name = model.name,
