@@ -34,6 +34,11 @@ namespace StudentWebAPIProject.DBSets.Config
                     Address = "USA"
                 }
             });
+
+            builder.HasOne(e => e.Department)
+                .WithMany(e => e.Students)
+                .HasForeignKey(e => e.DepartmentId)
+                .HasConstraintName("FK_Students_Department");
         }
     }
 }

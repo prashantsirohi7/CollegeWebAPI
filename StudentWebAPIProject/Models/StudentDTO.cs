@@ -21,5 +21,6 @@ namespace StudentWebAPIProject.Models
         public string address { get; set; }
         [DateCheck]
         public DateTime addmissionDate { get; set; }
+        public int departmentId { get; set; }
     }
 }

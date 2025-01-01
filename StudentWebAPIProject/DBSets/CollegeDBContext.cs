@@ -11,10 +11,12 @@ namespace StudentWebAPIProject.DBSets
             
         }
         public DbSet<Student> Students {  get; set; }
+        public DbSet<Department> Departments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new StudentConfig());
+            modelBuilder.ApplyConfiguration(new DepartmentConfig());
 
             /*modelBuilder.Entity<Student>().HasData(new List<Student> {
                 new Student
