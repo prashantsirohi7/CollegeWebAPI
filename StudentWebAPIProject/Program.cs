@@ -69,6 +69,32 @@ Creates 1 object per service call ['n*n' object instance for 'n' service calls &
 */
 //builder.Services.AddTransient<StudentWebAPIProject.Logging.ILogger, LogToMemory>();
 
+#region Adding CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        //Allow All origins, methods and headers
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+    options.AddPolicy("AllowAll", builder =>
+    {
+        //Allow All origins, methods and headers
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+    options.AddPolicy("AllowFewMethods", builder =>
+    {
+        //Allow only specific methods
+        builder.WithMethods("GET", "POST", "PUT", "DELETE");
+    });
+    options.AddPolicy("AllowLocalHost", builder =>
+    {
+        //Allow only specific origins
+        builder.WithOrigins("https://localhost:5000", "https://localhost:5001");
+    });
+});
+#endregion
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -80,8 +106,31 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+//Add before Cors
+app.UseRouting();
+
+//Use CORS (Add after Routing and before Authorization)
+app.UseCors();  //Use default policy instead of named policy
+
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    //endpoints.MapControllers()
+    //.RequireCors("AllowAll");
+
+    endpoints.MapGet("api/TestEndpoint", async context =>
+    {
+        await context.Response.WriteAsync("Hello World!");
+    }).RequireCors("AllowLocalHost");
+
+    endpoints.MapGet("api/TestEndpoint2", async context =>
+    {
+        await context.Response.WriteAsync("Hello World 2!");
+    }); //Uses default CORS policy
+});
+
+//mapping controller inside endpoints
+app.MapControllers().RequireCors("AllowAll");
 
 app.Run();

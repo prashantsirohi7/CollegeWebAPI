@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 
 namespace StudentWebAPIProject.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("AllowAll")]    //overriding the global policy
     public class DemoController : Controller
     {
         private readonly ILogger<DemoController> _logger;
@@ -13,6 +15,7 @@ namespace StudentWebAPIProject.Controllers
         }
 
         [HttpGet("Logging")]
+        [DisableCors]   //disabling the all cors policy for this method
         public IActionResult Index()
         {
             _logger.LogInformation("This is information level log");
