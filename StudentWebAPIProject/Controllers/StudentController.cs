@@ -5,11 +5,13 @@ using StudentWebAPIProject.Models;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using IMyLogger = StudentWebAPIProject.Logging.ILogger;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StudentWebAPIProject.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = "PolicyForLocalUsers", Roles = "Admin")]
     public class StudentController : ControllerBase
     {
         private readonly IMyLogger _myLogger;

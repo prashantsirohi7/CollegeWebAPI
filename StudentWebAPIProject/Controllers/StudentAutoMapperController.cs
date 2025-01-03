@@ -7,11 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using IMyLogger = StudentWebAPIProject.Logging.ILogger;
 using AutoMapper;
 using StudentWebAPIProject.DBSets.Repository;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StudentWebAPIProject.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
     public class StudentAutoMapperController : ControllerBase
     {
         private readonly IMyLogger _myLogger;
