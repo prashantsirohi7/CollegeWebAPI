@@ -20,6 +20,8 @@ namespace StudentWebAPIProject.Configurations
 
             CreateMap<RoleDTO, Role>().ReverseMap();
             CreateMap<RolePrivilegeDTO, RolePrivilege>().ReverseMap();
+            CreateMap<UserDTO, User>().ReverseMap();
+            CreateMap<UserReadOnlyDTO, User>().ReverseMap();
         }
     }
 }

@@ -1,51 +1,43 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StudentWebAPIProject.DBSets.Repository;
 using StudentWebAPIProject.Models;
+using StudentWebAPIProject.Services;
 
 namespace StudentWebAPIProject.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class RoleController : ControllerBase
+    [ApiController]
+    public class UserController : ControllerBase
     {
-        private readonly ICollegeRepository<Role> _repository;
         private readonly IMapper _mapper;
+        private readonly IUserService _userService;
         private ApiResponce _apiResponce;
-        public RoleController(ICollegeRepository<Role> repository, IMapper mapper)
+        public UserController(IMapper mapper, IUserService userService)
         {
-            _repository = repository;
             _mapper = mapper;
+            _userService = userService;
             _apiResponce = new();
         }
 
-        [HttpPost("Create", Name = "CreateRole")]
+        [HttpPost("Create", Name = "CreateUser")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApiResponce>> CreateRoleAsync([FromBody] RoleDTO dto)
+        public async Task<ActionResult<ApiResponce>> CreateUserAsync([FromBody] UserDTO dto)
         {
-            if (dto is null)
-                return BadRequest();
-
             try
             {
-                var role = _mapper.Map<Role>(dto);
-                role.IsDeleted = false;
-                role.CreatedDate = DateTime.Now;
-                role.ModifiedDate = DateTime.Now;
+                var result = await _userService.CreateUser(dto);
 
-                var result = await _repository.CreateAsync(role);
-                dto.Id = result.Id;
-
-                _apiResponce.Data = dto;
+                _apiResponce.Data = result;
                 _apiResponce.Status = true;
                 _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
-                //return Ok(_apiResponce);
-                return CreatedAtRoute("GetRoleById", new { id = dto.Id}, _apiResponce);
+                return CreatedAtRoute("GetUserById", new { id = result.Id}, _apiResponce);
             }
             catch (Exception ex)
             {
@@ -56,18 +48,18 @@ namespace StudentWebAPIProject.Controllers
             }
         }
 
-        [HttpGet("{id:int}", Name = "GetRoleById")]
-        public async Task<ActionResult<ApiResponce>> GetRoleByIdAsync(int id)
+        [HttpGet("{id:int}", Name = "GetUserById")]
+        public async Task<ActionResult<ApiResponce>> GetUserByIdAsync(int id)
         {
             if (id <= 0)
-                return BadRequest($"Not a valid role id - {id}");
+                return BadRequest($"Not a valid user id - {id}");
             try
             {
-                var result = await _repository.GetByFilterAsync(role => role.Id == id);
+                var result = await _userService.GetUserById(id);
                 if (result is null)
                     return NotFound($"No role found with {id}");
 
-                _apiResponce.Data = _mapper.Map<RoleDTO>(result);
+                _apiResponce.Data = result;
                 _apiResponce.Status = true;
                 _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
                 return Ok(_apiResponce);
@@ -81,13 +73,13 @@ namespace StudentWebAPIProject.Controllers
             }
         }
 
-        [HttpGet("All", Name = "GetAllRoles")]
-        public async Task<ActionResult<ApiResponce>> GetAllRolesAsync()
+        [HttpGet("All", Name = "GetAllUsers")]
+        public async Task<ActionResult<ApiResponce>> GetAllUsersAsync()
         {
             try
             {
-                var result = await _repository.GetAllAsync();
-                _apiResponce.Data = _mapper.Map<List<RoleDTO>>(result);
+                var result = await _userService.GetAllUsers();
+                _apiResponce.Data = result;
                 _apiResponce.Status = true;
                 _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
                 return Ok(_apiResponce);
@@ -101,18 +93,18 @@ namespace StudentWebAPIProject.Controllers
             }
         }
 
-        [HttpGet("{name:alpha}", Name = "GetRoleByName")]
-        public async Task<ActionResult<ApiResponce>> GetRoleByNameAsync(string name)
+        [HttpGet("{name:alpha}", Name = "GetUserByName")]
+        public async Task<ActionResult<ApiResponce>> GetUserByNameAsync(string name)
         {
             if (string.IsNullOrEmpty(name))
                 return BadRequest($"Not a valid name - {name}");
             try
             {
-                var result = await _repository.GetByFilterAsync(role => role.RoleName.ToLower() == name.ToLower());
+                var result = await _userService.GetUserByName(name);
                 if (result is null)
-                    return NotFound($"No role found with {name}");
+                    return NotFound($"No user found with {name}");
 
-                _apiResponce.Data = _mapper.Map<RoleDTO>(result);
+                _apiResponce.Data = result;
                 _apiResponce.Status = true;
                 _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
                 return Ok(_apiResponce);
@@ -126,21 +118,43 @@ namespace StudentWebAPIProject.Controllers
             }
         }
 
-        [HttpPut("Update", Name = "UpdateRole")]
-        public async Task<ActionResult<ApiResponce>> UpdateRoleAsync([FromBody] RoleDTO dto)
+        [HttpGet("GetAllUsersByUserTypeId/{userTypeId:int}", Name = "GetAllUsersByUserTypeId")]
+        public async Task<ActionResult<ApiResponce>> GetAllRolePrivilegeByRoleIdAsync(int userTypeId)
+        {
+            if (userTypeId <= 0)
+                return BadRequest($"Not a valid userType id - {userTypeId}");
+            try
+            {
+                var result = await _userService.GetUserByUserTypeId(userTypeId);
+                if (result is null)
+                    return NotFound($"No user found with {userTypeId}");
+
+                _apiResponce.Data = result;
+                _apiResponce.Status = true;
+                _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
+                return Ok(_apiResponce);
+            }
+            catch (Exception ex)
+            {
+                _apiResponce.Errors.Add(ex.Message);
+                _apiResponce.Status = false;
+                _apiResponce.StatusCode = System.Net.HttpStatusCode.InternalServerError;
+                return _apiResponce;
+            }
+        }
+
+        [HttpPut("Update", Name = "UpdateUser")]
+        public async Task<ActionResult<ApiResponce>> UpdateUserAsync([FromBody] UserReadOnlyDTO dto)
         {
             if (dto is null || dto.Id <= 0)
                 return BadRequest();
             try
             {
-                var existingRole = await _repository.GetByFilterAsync(role => role.Id == dto.Id, true);
-                if (existingRole is null)
-                    return NotFound($"No role found with {dto.Id}");
+                var result = await _userService.UpdateUser(dto);
+                if (result is null)
+                    return NotFound($"No user found with {dto.Id}");
 
-                var newRole = _mapper.Map<Role>(dto);
-
-                var result = await _repository.UpdateAsync(newRole);
-                _apiResponce.Data = dto;
+                _apiResponce.Data = result;
                 _apiResponce.Status = true;
                 _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
                 return Ok(_apiResponce);
@@ -154,18 +168,38 @@ namespace StudentWebAPIProject.Controllers
             }
         }
 
-        [HttpDelete("Delete/{id:int}", Name = "DeleteRoleById")]
-        public async Task<ActionResult<ApiResponce>> DeleteRoleAsync(int id)
+        [HttpDelete("Delete/{id:int}", Name = "DeleteUserById")]
+        public async Task<ActionResult<ApiResponce>> DeleteUserAsync(int id)
         {
             if (id <= 0)
-                return BadRequest($"Not a valid role id - {id}");
+                return BadRequest($"Not a valid role Privilege id - {id}");
             try
             {
-                var existingRole = await _repository.GetByFilterAsync(role => role.Id == id);
-                if (existingRole is null)
-                    return NotFound($"No role found with {id}");
+                var result = await _userService.DeleteUserById(id);
 
-                var result = await _repository.DeleteAsync(existingRole);
+                _apiResponce.Data = true;
+                _apiResponce.Status = true;
+                _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;
+                return Ok(_apiResponce);
+            }
+            catch (Exception ex)
+            {
+                _apiResponce.Errors.Add(ex.Message);
+                _apiResponce.Status = false;
+                _apiResponce.StatusCode = System.Net.HttpStatusCode.InternalServerError;
+                return _apiResponce;
+            }
+        }
+
+        [HttpPut("UpdatePassword", Name = "UpdatePassword")]
+        public async Task<ActionResult<ApiResponce>> UpdatePasswordUserAsync([FromQuery] int id, [FromBody] string password)
+        {
+            if (password is null || id <= 0)
+                return BadRequest();
+            try
+            {
+                var result = await _userService.UpdatePassword(id, password);
+
                 _apiResponce.Data = true;
                 _apiResponce.Status = true;
                 _apiResponce.StatusCode = System.Net.HttpStatusCode.OK;

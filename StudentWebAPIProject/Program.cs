@@ -7,6 +7,7 @@ using StudentWebAPIProject.DBSets.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using StudentWebAPIProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +87,7 @@ builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 builder.Services.AddScoped<StudentWebAPIProject.Logging.ILogger, LogToDB>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped(typeof(ICollegeRepository<>), typeof(CollegeRepository<>));
+builder.Services.AddScoped<IUserService, UserService>();
 
 /*
 Dependency Injection
