@@ -33,6 +33,14 @@ namespace StudentWebAPIProject.DBSets.Repository
             return await _dbSet.ToListAsync();
         }
 
+        public async Task<List<T>> GetAllByFilterAsync(Expression<Func<T, bool>> filter, bool asNoTracking = false)
+        {
+            if (asNoTracking)
+                return await _dbSet.AsNoTracking().Where(filter).ToListAsync();
+            else
+                return await _dbSet.Where(filter).ToListAsync();
+        }
+
         public async Task<T> GetByFilterAsync(Expression<Func<T, bool>> filter, bool asNoTracking = false)
         {
             if (asNoTracking)

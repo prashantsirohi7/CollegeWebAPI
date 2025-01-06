@@ -23,6 +23,7 @@ namespace StudentWebAPIProject.Controllers
         private readonly IMapper _mapper;
         //private readonly ICollegeRepository<Student> _studentRepository;
         private readonly IStudentRepository _studentRepository;
+        private ApiResponce _apiResponce;
 
         public StudentAutoMapperController(IMyLogger myLogger, ILogger<StudentController> inbuildLogger, 
             IStudentRepository studentRepository, IMapper mapper)
@@ -31,6 +32,7 @@ namespace StudentWebAPIProject.Controllers
             _inbuildLogger = inbuildLogger;
             _studentRepository = studentRepository;
             _mapper = mapper;
+            _apiResponce = new ApiResponce();
         }
 
         [HttpGet("{id:int}", Name = "StudentDetailsByIdAutoMapper")]
@@ -38,19 +40,33 @@ namespace StudentWebAPIProject.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<StudentDTO>> StudentDetailsAsync(int id)
+        public async Task<ActionResult<ApiResponce>> StudentDetailsAsync(int id)
         {
             if (id <= 0)
                 return BadRequest($"Not a valid student id - {id}");
 
-            var student = await _studentRepository.GetByFilterAsync(student => student.Id == id);
-            if (student is null)
-                return NotFound($"No student found with {id}");
+            try
+            {
+                var student = await _studentRepository.GetByFilterAsync(student => student.Id == id);
+                if (student is null)
+                    return NotFound($"No student found with {id}");
 
-            var studentDto = _mapper.Map<StudentDTO>(student);
+                var studentDto = _mapper.Map<StudentDTO>(student);
 
-            _myLogger.Log("Fetched Student Details");
-            return Ok(studentDto);
+                _apiResponce.Data = studentDto;
+                _apiResponce.Status = true;
+                _apiResponce.StatusCode = HttpStatusCode.OK;
+
+                _myLogger.Log("Fetched Student Details");
+                return Ok(_apiResponce);
+            }
+            catch (Exception ex)
+            {
+                _apiResponce.Status = false;
+                _apiResponce.StatusCode = HttpStatusCode.InternalServerError;
+                _apiResponce.Errors.Add(ex.Message);
+                return _apiResponce;
+            }
         }
 
         [HttpGet("All")]
@@ -131,7 +147,7 @@ namespace StudentWebAPIProject.Controllers
             var newStudent = await _studentRepository.CreateAsync(student);
 
             model.id = newStudent.Id;
-            return CreatedAtRoute("StudentDetailsById", new { id = model.id }, model);
+            return CreatedAtRoute("StudentDetailsByIdAutoMapper", new { id = model.id }, model);
         }
 
         [HttpPut("Update")]

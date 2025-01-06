@@ -18,6 +18,8 @@ namespace StudentWebAPIProject.Configurations
             //Config for transforming property names
             //CreateMap<StudentDTO, DBSets.Student>().ReverseMap().AddTransform<string>(x => string.IsNullOrWhiteSpace(x) ? "null value" : x);
 
+            CreateMap<RoleDTO, Role>().ReverseMap();
+            CreateMap<RolePrivilegeDTO, RolePrivilege>().ReverseMap();
         }
     }
 }

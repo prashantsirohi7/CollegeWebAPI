@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentWebAPIProject.DBSets;
 
@@ -11,9 +12,11 @@ using StudentWebAPIProject.DBSets;
 namespace StudentWebAPIProject.Migrations
 {
     [DbContext(typeof(CollegeDBContext))]
-    partial class CollegeDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250104134311_AddingRolePrivilegeTable")]
+    partial class AddingRolePrivilegeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,7 +218,7 @@ namespace StudentWebAPIProject.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserTypeId")
+                    b.Property<int>("UserType")
                         .HasColumnType("int");
 
                     b.Property<string>("Username")
@@ -224,79 +227,7 @@ namespace StudentWebAPIProject.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserTypeId");
-
                     b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("StudentWebAPIProject.Models.UserRoleMapping", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserRoleMapping");
-                });
-
-            modelBuilder.Entity("StudentWebAPIProject.Models.UserType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserTypes", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "For Students",
-                            Name = "Student"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "For Faculty",
-                            Name = "Faculty"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "For Support Staff",
-                            Name = "Support Staff"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "For Parents",
-                            Name = "Parents"
-                        });
                 });
 
             modelBuilder.Entity("StudentWebAPIProject.Models.RolePrivilege", b =>
@@ -321,37 +252,6 @@ namespace StudentWebAPIProject.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity("StudentWebAPIProject.Models.User", b =>
-                {
-                    b.HasOne("StudentWebAPIProject.Models.UserType", "UserType")
-                        .WithMany("Users")
-                        .HasForeignKey("UserTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Users_UserTypes");
-
-                    b.Navigation("UserType");
-                });
-
-            modelBuilder.Entity("StudentWebAPIProject.Models.UserRoleMapping", b =>
-                {
-                    b.HasOne("StudentWebAPIProject.Models.Role", "Role")
-                        .WithMany("UserRoleMappings")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("StudentWebAPIProject.Models.User", "User")
-                        .WithMany("UserRoleMappings")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("StudentWebAPIProject.Models.Department", b =>
                 {
                     b.Navigation("Students");
@@ -360,18 +260,6 @@ namespace StudentWebAPIProject.Migrations
             modelBuilder.Entity("StudentWebAPIProject.Models.Role", b =>
                 {
                     b.Navigation("RolePrivileges");
-
-                    b.Navigation("UserRoleMappings");
-                });
-
-            modelBuilder.Entity("StudentWebAPIProject.Models.User", b =>
-                {
-                    b.Navigation("UserRoleMappings");
-                });
-
-            modelBuilder.Entity("StudentWebAPIProject.Models.UserType", b =>
-                {
-                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }
