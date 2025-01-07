@@ -38,6 +38,35 @@ namespace StudentWebAPIProject.Services
             return (hash, Convert.ToBase64String(salt));
         }
 
+        public async Task<bool> VerifyUserPassword(int userId, string password)
+        {
+            var user = await _repository.GetByFilterAsync(user => user.Id == userId);
+
+            if (user == null)
+                throw new ArgumentException($"No User found with Id - {userId}");
+
+            return VerifyPassword(password, user.Password, user.PasswordSalt);
+        }
+
+        private bool VerifyPassword(string inputPassword, string storedHash, string storedSalt)
+        {
+            // Convert the stored salt from Base64
+            var saltBytes = Convert.FromBase64String(storedSalt);
+
+            // Hash the input password using the same salt and parameters
+            var hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: inputPassword,
+                salt: saltBytes,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 10000,
+                numBytesRequested: 256 / 8
+            ));
+
+            // Compare the resulting hash with the stored hash
+            return hash == storedHash;
+        }
+
+
         public async Task<UserReadOnlyDTO> CreateUser(UserDTO userDTO)
         {
             ArgumentNullException.ThrowIfNull(userDTO, nameof(userDTO));

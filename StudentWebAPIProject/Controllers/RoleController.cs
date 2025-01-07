@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentWebAPIProject.DBSets.Repository;
 using StudentWebAPIProject.Models;
@@ -7,6 +8,7 @@ namespace StudentWebAPIProject.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "SuperAdmin")]
     public class RoleController : ControllerBase
     {
         private readonly ICollegeRepository<Role> _repository;

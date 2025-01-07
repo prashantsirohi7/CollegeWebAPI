@@ -12,6 +12,7 @@ namespace StudentWebAPIProject.Services
         public Task<UserReadOnlyDTO> UpdateUser(UserReadOnlyDTO dto);
         public Task<bool> DeleteUserById(int id);
         public Task<bool> UpdatePassword(int id, string password);
+        public Task<bool> VerifyUserPassword(int userId, string password);
         public (string PasswordHash, string PasswordSalt) GeneratePasswordHashWithSalt(string password);
     }
 }
